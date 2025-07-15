@@ -1,0 +1,28 @@
+format_version: "11"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  primary:
+    steps:
+      - git-clone: {}
+      - script:
+          title: Install Node.js dan NPM
+          inputs:
+            - content: |-
+                #!/bin/bash
+                echo "Install Node.js"
+                node -v
+                npm -v
+      - script:
+          title: Jalankan npm install
+          inputs:
+            - content: |-
+                #!/bin/bash
+                npm install
+      - script:
+          title: Jalankan app.js
+          inputs:
+            - content: |-
+                #!/bin/bash
+                echo "Menjalankan node app.js..."
+                node app.js
