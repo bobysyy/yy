@@ -1,28 +1,52 @@
-format_version: "11"
+format_version: '23'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
-
+project_type: node-js
 workflows:
-  primary:
+  run_tests:
     steps:
-      - git-clone: {}
-      - script:
-          title: Install Node.js dan NPM
-          inputs:
-            - content: |-
-                #!/bin/bash
-                echo "Install Node.js"
-                node -v
-                npm -v
-      - script:
-          title: Jalankan npm install
-          inputs:
-            - content: |-
-                #!/bin/bash
-                npm install
-      - script:
-          title: Jalankan app.js
-          inputs:
-            - content: |-
-                #!/bin/bash
-                echo "Menjalankan node app.js..."
-                node app.js
+    - git-clone@8: {}
+    - script@1:
+        title: Install Node.js
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -euxo pipefail
+
+            export ASDF_NODEJS_LEGACY_FILE_DYNAMIC_STRATEGY=latest_installed
+            envman add --key ASDF_NODEJS_LEGACY_FILE_DYNAMIC_STRATEGY --value latest_installed
+
+            pushd "${NODEJS_PROJECT_DIR:-.}" > /dev/null
+
+            asdf install nodejs
+
+            popd > /dev/null
+    - restore-npm-cache@2: {}
+    - npm@1:
+        title: npm install
+        inputs:
+        - command: install
+    - save-npm-cache@1: {}
+
+    # ? Tambahkan step ini:
+    - script@1:
+        title: Jalankan node app.js
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            echo "Menjalankan aplikasi..."
+            node app.js
+
+  triggers:
+    push:
+    - branch: main
+    pull_request:
+    - source_branch: "*"
+meta:
+  bitrise.io:
+    stack: linux-docker-android-22.04
+    machine_type_id: elite
+app:
+  envs:
+  - NODEJS_PROJECT_DIR: "."
+    opts:
+      is_expand: false
